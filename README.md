@@ -119,7 +119,7 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO backup_user;
 
 9. Ротация старых архивов \
     rotate_backups() оставляет только последние BACKUP_KEEP архивов. \
-    Алгоритм: \
+    Алгоритм:
     - Находит все архивы по маске pg_backup_*.tar.gz
     - Сортирует по времени создания
     - Удаляет самые старые (если их больше заданного лимита)
@@ -136,7 +136,7 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO backup_user;
 
 Файл сервиса: \
 `/etc/systemd/system/pg_backup.service` \
-Управление сервисом \
+**Управление сервисом** \
 Перечитать systemd: \
 `sudo systemctl daemon-reload` \
 Однократный запуск: \
@@ -146,7 +146,7 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO backup_user;
 
 Файл таймера: \
 `/etc/systemd/system/pg_backup.timer` \
-Активируем таймер \
+Активируем таймер
 ```
 sudo systemctl daemon-reload
 sudo systemctl enable --now pg_backup.timer
@@ -209,48 +209,48 @@ sudo /opt/pg_backup/backup_pg.sh
 После проверки вернуть корректный пароль.
 
 3. Ошибка создания дампа \
-Самый простой способ — создать таблицу и отобрать у backup_user права SELECT. \
-Создать таблицу \
-`sudo -u postgres psql testdb` \
-Внутри
-```
-CREATE TABLE data (id INT, name TEXT);
-INSERT INTO data VALUES (1, 'Hello');
-\q
-```
-Убрать права \
-`sudo -u postgres psql testdb1 -c "REVOKE SELECT ON ALL TABLES IN SCHEMA public FROM backup_user;"` \
-Запустить скрипт \
-Ожидаемое поведение:
-- pg_dump вернёт ошибку прав доступа;
-- скрипт залогирует ошибку дампа и завершит работу;
-- архив не будет создан/перенесён.
+    Самый простой способ — создать таблицу и отобрать у backup_user права SELECT. \
+    Создать таблицу \
+    `sudo -u postgres psql testdb` \
+    Внутри
+    ```
+    CREATE TABLE data (id INT, name TEXT);
+    INSERT INTO data VALUES (1, 'Hello');
+    \q
+    ```
+    Убрать права \
+    `sudo -u postgres psql testdb1 -c "REVOKE SELECT ON ALL TABLES IN SCHEMA public FROM backup_user;"` \
+    Запустить скрипт \
+    Ожидаемое поведение:
+    - pg_dump вернёт ошибку прав доступа;
+    - скрипт залогирует ошибку дампа и завершит работу;
+    - архив не будет создан/перенесён.
 
-После теста вернуть права \
-`sudo -u postgres psql testdb1 -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO backup_user;"`
+    После теста вернуть права \
+    `sudo -u postgres psql testdb1 -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO backup_user;"`
 
 4. Ошибка проверки архива \
-Временно можно добавить в create_archive() строку (для теста) \
-`truncate -s 50 "$ARCHIVE_PATH"` \
-Сценарий:
-1. Вставить truncate в конец create_archive().
-2. Запустить скрипт.
-3. Ожидаемое поведение:
-    - tar -tzf не сможет прочитать архив;
-    - скрипт залогирует "Архив поврежден" и завершит работу;
-    - архив не переносится в /backups.
+    Временно можно добавить в create_archive() строку (для теста) \
+    `truncate -s 50 "$ARCHIVE_PATH"` \
+    Сценарий:
+    - Вставить truncate в конец create_archive().
+    - Запустить скрипт.
+    - Ожидаемое поведение:
+        - tar -tzf не сможет прочитать архив;
+        - скрипт залогирует "Архив поврежден" и завершит работу;
+        - архив не переносится в /backups.
 
-После теста удалить строку truncate из скрипта.
+    После теста удалить строку truncate из скрипта.
 
 5. Ошибка при недостатке свободного места на диске \
-Создадим файл, который забьёт раздел /tmp или /backups под завязку. \
-`sudo dd if=/dev/zero of=/tmp/bigfile bs=100M count=1000` \
-Запуск скрипта \
-Ожидаемое поведение \
-- скрипт завершится с ошибкой на этапе create_archive \
-- в лог будет записано: Ошибка создания архива \
-- процесс остановится, архив не будет создан \
-- перенос архива и ротация не выполняются \
-- временный каталог будет очищен \
-После теста удаляем фейковый файл \
-`sudo rm -f /tmp/bigfile`
+    Создадим файл, который забьёт раздел /tmp или /backups под завязку. \
+    `sudo dd if=/dev/zero of=/tmp/bigfile bs=100M count=1000` \
+    Запуск скрипта \
+    Ожидаемое поведение
+    - скрипт завершится с ошибкой на этапе create_archive
+    - в лог будет записано: Ошибка создания архива
+    - процесс остановится, архив не будет создан
+    - перенос архива и ротация не выполняются
+    - временный каталог будет очищен \
+    После теста удаляем фейковый файл \
+    `sudo rm -f /tmp/bigfile`
