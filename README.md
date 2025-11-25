@@ -24,7 +24,7 @@
 sudo apt update
 sudo apt install postgresql postgresql-client
 sudo systemctl start postgresql
-#проверка
+# проверка
 sudo systemctl status postgresql
 which psql
 which pg_dump
@@ -54,19 +54,19 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO backup_user;
 ## Структура файлов и директорий
 
 /opt/pg_backup/
-    backup_pg.sh      # основной скрипт резервного копирования
-    .env              # настройки скрипта
+    - `backup_pg.sh`      # основной скрипт резервного копирования
+    - `.env`              # настройки скрипта
 
 Опционально:
 /etc/systemd/system/
-    pg_backup.service # systemd-сервис
-    pg_backup.timer   # systemd-timer
+    - `pg_backup.service` # systemd-сервис
+    - `pg_backup.timer`   # systemd-timer
 
 ## Дополнительные каталоги:
 
-/tmp/pg_backups/         # временные каталоги для дампов (создаются автоматически)
-/backups/                # каталог для хранения готовых архивов
-/var/log/pg_backup.log   # лог выполнения скрипта
+- `/tmp/pg_backups/`         # временные каталоги для дампов (создаются автоматически)
+- `/backups/`                # каталог для хранения готовых архивов
+- `/var/log/pg_backup.log`   # лог выполнения скрипта
 
 ## Как работает скрипт (пошагово)
 
