@@ -1,0 +1,15 @@
+[Unit]
+Description=PostgreSQL Backup Script
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/opt/pg_backup/backup_pg.sh
+# Чтобы лог скрипта шел в systemctl status
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
