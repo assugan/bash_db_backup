@@ -15,7 +15,7 @@ set -o allexport
 source "$ENV_PATH"
 set +o allexport
 
-# НАСТРОЙКИ (значения берём из .env, при отсутствии — дефолт)
+# НАСТРОЙКИ (значения берём из .env, при отсутствии - дефолт)
 
 # Где временно храним дампы
 BACKUP_BASE_DIR="${BACKUP_BASE_DIR:-/tmp/pg_backups}"
