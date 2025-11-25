@@ -136,18 +136,19 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO backup_user;
 
 Файл сервиса: \
 `/etc/systemd/system/pg_backup.service` \
-**Управление сервисом** \
-Перечитать systemd: \
-`sudo systemctl daemon-reload` \
-Однократный запуск: \
-`sudo systemctl start pg_backup.service` \
-Включить автозапуск: \
-`sudo systemctl enable pg_backup.service`
-
-Файл таймера: \
-`/etc/systemd/system/pg_backup.timer` \
-Активируем таймер
+**Управление сервисом**
 ```
+# Перечитать systemd:
+`sudo systemctl daemon-reload`
+# Однократный запуск:
+`sudo systemctl start pg_backup.service`
+# Включить автозапуск:
+`sudo systemctl enable pg_backup.service`
+```
+Файл таймера: \
+`/etc/systemd/system/pg_backup.timer`
+```
+# Активируем таймер:
 sudo systemctl daemon-reload
 sudo systemctl enable --now pg_backup.timer
 ```
