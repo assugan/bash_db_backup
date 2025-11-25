@@ -53,13 +53,13 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO backup_user;
 ```
 ## Структура файлов и директорий
 
-/opt/pg_backup/ \
-- `backup_pg.sh`      # основной скрипт резервного копирования \
+/opt/pg_backup/
+- `backup_pg.sh`      # основной скрипт резервного копирования
 - `.env`              # настройки скрипта
 
-Опционально: \
-/etc/systemd/system/ \
-- `pg_backup.service` # systemd-сервис \
+Опционально:
+/etc/systemd/system/
+- `pg_backup.service` # systemd-сервис
 - `pg_backup.timer`   # systemd-timer
 
 ## Дополнительные каталоги:
