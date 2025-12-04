@@ -30,41 +30,43 @@ which pg_dump
 ### Настройка
 ```
 # Создать пользователя для бэкапов
-sudo -u postgres psql
-# Внутри psql
-SET password_encryption = 'scram-sha-256';
-CREATE USER backup_user WITH PASSWORD 'supersecret';
+sudo -u postgres psql -c "CREATE ROLE backup_user LOGIN SUPERUSER PASSWORD 'your_password';"
+# Настройка .pgpass для автоматической аутентификации
+sudo -u postgres bash -c 'echo "127.0.0.1:5432:*:backup_user:your_password" > ~/.pgpass'
+sudo -u postgres chmod 600 /var/lib/postgresql/.pgpass
 
+# при необходимости можно дополнительно создать тестовые базы:
 CREATE DATABASE testdb1;
 CREATE DATABASE testdb2;
-
-GRANT CONNECT ON DATABASE testdb1 TO backup_user;
-GRANT CONNECT ON DATABASE testdb2 TO backup_user;
-\q
-
-# Права на объекты в базах
-sudo -u postgres psql testdb1
-# Внутри testdb1
-GRANT USAGE ON SCHEMA public TO backup_user;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO backup_user;
 \q
 ```
 ## Структура файлов и директорий
-
+### В репозитории:
+```
+bash_db_backup/
+├── backup_pg.sh      # основной скрипт резервного копирования
+├── README.md         # документация
+├── pg_backup.service # пример unit-файла systemd (опционально)
+├── pg_backup.timer   # пример таймера systemd (опционально)
+├── .env.example      # пример содержимого .env
+└── .gitignore
+```
+### На сервере (вручную создаются следующие директория и файлы):
+```
 /opt/pg_backup/
-- `backup_pg.sh`      # основной скрипт резервного копирования
-- `.env`              # настройки скрипта
+├── backup_pg.sh   # скрипт
+└── .env           # локальные настройки
+```
+#### Дополнительные каталоги (в данном примере создаются автоматически при первом выполнении скрипта):
 
-Опционально:
+- `/tmp/pg_backups/`               # временные каталоги для дампов
+- `/backups/`                      # каталог для хранения готовых архивов (может быть отдельным диском/разделом)
+- `/opt/pg_backup/pg_backup.log`   # логи выполнения скрипта
+
+#### Опционально:
 /etc/systemd/system/
 - `pg_backup.service` # systemd-сервис
 - `pg_backup.timer`   # systemd-timer
-
-## Дополнительные каталоги:
-
-- `/tmp/pg_backups/`         # временные каталоги для дампов (создаются автоматически)
-- `/backups/`                # каталог для хранения готовых архивов (может быть отдельным диском/разделом)
-- `/var/log/pg_backup.log`   # логи выполнения скрипта
 
 ## Как работает скрипт (пошагово)
 
@@ -81,10 +83,10 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO backup_user;
     - возможность работы с PostgreSQL.
     При любой ошибке - запись в лог и завершение.
 
-3. Создание временного рабочего каталога \
-    `init_backup()` создаёт каталог вида: \
+3. Проверка наличия временного рабочего каталога \
+    `init_backup()` если каталог есть: \
     `/tmp/pg_backups/pg_backup_XXXXXX` \
-    В него складываются дампы всех баз.
+    В него складываются дампы всех баз. В ином случае завершение скрипта с ошибкой.
 
 4. Получение списка баз данных \
     Функция `get_databases()` делает запрос: \
@@ -154,7 +156,7 @@ sudo systemctl enable --now pg_backup.timer
 ## Где смотреть логи
 - Основной лог скрипта: \
     `LOG_FILE` из `.env`, по умолчанию:
-`/var/log/pg_backup.log`
+`/opt/pg_backup/pg_backup.log`
 - При запуске через systemd-сервис \
 `sudo journalctl -u pg_backup.service`
 

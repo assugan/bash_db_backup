@@ -1,15 +1,18 @@
 [Unit]
 Description=PostgreSQL Backup Script
-After=network.target postgresql.service
-Wants=postgresql.service
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=oneshot
-User=root
+User=postgres
+Group=postgres
+WorkingDirectory=/opt/pg_backup
 ExecStart=/opt/pg_backup/backup_pg.sh
-# Чтобы лог скрипта шел в systemctl status
-StandardOutput=journal
-StandardError=journal
+# Не нужно писать стандартные выводы - journald сам справится
+# StandardOutput=journal
+# StandardError=journal
+TimeoutStopSec=300
 
 [Install]
 WantedBy=multi-user.target

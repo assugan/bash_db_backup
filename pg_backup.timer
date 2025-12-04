@@ -1,11 +1,9 @@
 [Unit]
-Description=Run PostgreSQL Backup every 3 days
+Description=Daily PostgreSQL Backup
 
 [Timer]
-# Запуск каждые 3 дня
-OnBootSec=10min
-OnUnitActiveSec=3d
-AccuracySec=1h
+OnCalendar=*-*-* 03:00:00
+Persistent=true
 
 [Install]
 WantedBy=timers.target

@@ -24,11 +24,10 @@ BACKUP_BASE_DIR="${BACKUP_BASE_DIR:-/tmp/pg_backups}"
 BACKUP_TARGET_DIR="${BACKUP_TARGET_DIR:-/backups}"
 
 # Лог-файл
-LOG_FILE="${LOG_FILE:-/var/log/pg_backup.log}"
+LOG_FILE="${LOG_FILE:-/opt/pg_backup/pg_backup.log}"
 
 # Настройки PostgreSQL
 PGUSER="${PGUSER:-postgres}"
-PGPASSWORD="${PGPASSWORD:-}"
 PGHOST="${PGHOST:-localhost}"
 PGPORT="${PGPORT:-5432}"
 
@@ -42,6 +41,40 @@ PGDATABASE_EXCLUDE=("postgres" "template0" "template1")
 TMP_DIR=""
 ARCHIVE_PATH=""
 DB_LIST=()
+
+# СОЗДАНИЕ КАТАЛОГОВ ПРИ ПЕРВОМ ЗАПУСКЕ
+
+init_directories() {
+
+    if [[ ! -d "$BACKUP_BASE_DIR" ]]; then
+        mkdir -p "$BACKUP_BASE_DIR" \
+            || fail "Не удалось создать каталог $BACKUP_BASE_DIR"
+        log_info "Создан каталог $BACKUP_BASE_DIR"
+    fi
+
+    if [[ ! -d "$BACKUP_TARGET_DIR" ]]; then
+        mkdir -p "$BACKUP_TARGET_DIR" \
+            || fail "Не удалось создать каталог $BACKUP_TARGET_DIR"
+        log_info "Создан каталог $BACKUP_TARGET_DIR"
+    fi
+
+    ### создаём каталог под лог
+    local log_dir
+    log_dir="$(dirname "$LOG_FILE")"
+
+    if [[ ! -d "$log_dir" ]]; then
+        mkdir -p "$log_dir" \
+            || fail "Не удалось создать каталог логов $log_dir"
+        log_info "Создан каталог логов $log_dir"
+    fi
+
+    ### создаём лог-файл, если нет
+    if [[ ! -f "$LOG_FILE" ]]; then
+        touch "$LOG_FILE" \
+            || fail "Не удалось создать лог-файл $LOG_FILE"
+        log_info "Создан лог-файл $LOG_FILE"
+    fi
+}
 
 # ЛОГИРОВАНИЕ
 
@@ -86,10 +119,6 @@ check_requirements() {
             fail "Не найден бинарник '$b' в PATH"
         fi
     done
-
-    if [[ ! -d "$BACKUP_TARGET_DIR" ]]; then
-        fail "Каталог для бэкапов $BACKUP_TARGET_DIR не существует"
-    fi
 
     log_info "Проверка окружения пройдена"
 }
@@ -237,8 +266,10 @@ rotate_backups() {
 # MAIN
 
 main() {
+    : > "$LOG_FILE"
     log_info "Запуск скрипта резервного копирования PostgreSQL"
 
+    init_directories
     check_requirements
     init_backup
     get_databases
